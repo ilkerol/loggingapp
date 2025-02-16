@@ -5,6 +5,7 @@
   rel="stylesheet"
   href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css"
   >
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Logging-App</title>
@@ -100,11 +101,10 @@
     }
   </style>
 </head>
-  
 <body class="dark-theme">
   <h1>Logging-App</h1>
   <label class="toggle-switch">
-    <input type="checkbox" id="theme-toggle">
+    <input type="checkbox" id="theme-toggle" checked>
     <span class="slider"></span>
   </label>
 
@@ -134,11 +134,11 @@
     <h2>Health Data</h2>
     <div class="health-data-field">
       <label for="systolic">Systolic Blood Pressure:</label>
-      <input type="number" id="systolic">
+      <input type="number" id="systolic" min="70" max="200">
     </div>
     <div class="health-data-field">
       <label for="diastolic">Diastolic Blood Pressure:</label>
-      <input type="number" id="diastolic">
+      <input type="number" id="diastolic" min="30" max="120">
     </div>
     <div class="health-data-field">
       <label for="tinnitus">Tinnitus (1=low, 5=high):</label>
@@ -150,7 +150,7 @@
     </div>
     <div class="health-data-field">
       <label for="heart-rate">Heart Rate:</label>
-      <input type="number" id="heart-rate">
+      <input type="number" id="heart-rate" min="40" max="180">
     </div>
     <button id="confirm-health-data">Confirm</button>
   </div>
@@ -178,16 +178,16 @@
     </table>
   </div>
 
-<!-- Manage Data Section -->
-<div id="manage-data-section" class="collapsed">
-  <h2>Manage Data</h2>
-  <button id="export-data">Export Data as CSV</button>
-  <button id="mail-data">Mail Data</button>
-  <button id="delete-data">Delete All Data</button>
-  <button id="store-json">Store Data as JSON</button>
-  <input type="file" id="restore-json" accept=".json" style="display: none;">
-  <button onclick="document.getElementById('restore-json').click()">Restore Data from JSON</button>
-</div>
+  <!-- Manage Data Section -->
+  <div id="manage-data-section" class="collapsed">
+    <h2>Manage Data</h2>
+    <button id="export-data">Export Data as CSV</button>
+    <button id="mail-data">Mail Data</button>
+    <button id="delete-data">Delete All Data</button>
+    <button id="store-json">Store Data as JSON</button>
+    <input type="file" id="restore-json" accept=".json" style="display: none;">
+    <button onclick="document.getElementById('restore-json').click()">Restore Data from JSON</button>
+  </div>
 
   <script src="logapp.js"></script>
 </body>

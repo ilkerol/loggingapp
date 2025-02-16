@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logging-App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: white;
+      color: black;
+    }
+    .dark-theme {
+      background-color: #333;
+      color: white;
+    }
+    .collapsed {
+      display: none;
+    }
+    button {
+      margin: 5px;
+      font-size: 20px; /* Larger button text */
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid black;
+      padding: 8px;
+      text-align: left;
+    }
+    .toggle-switch {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 34px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    .health-data-field {
+      margin-bottom: 15px; /* More spacing */
+    }
+    .tinnitus-button.selected, .mood-button.selected {
+      background-color: #4CAF50; /* Green for selected */
+      color: white;
+    }
+    .section-toggle-button {
+      background-color: #4CAF50; /* Green for show */
+    }
+    .section-toggle-button.hide {
+      background-color: #f44336; /* Red for hide */
+    }
+    #week-plan-section .mood-buttons {
+      display: flex; /* Mood buttons in one line */
+      gap: 5px; /* Spacing between buttons */
+    }
+    #week-plan-section #confirm-week-plan {
+      display: block; /* Confirm button below mood buttons */
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Logging-App</h1>
+  <label class="toggle-switch">
+    <input type="checkbox" id="theme-toggle">
+    <span class="slider"></span>
+  </label>
+
+  <div>
+    <button id="week-plan-btn" class="section-toggle-button">Show Week Plan</button>
+    <button id="health-data-btn" class="section-toggle-button">Show Health Data</button>
+    <button id="show-log-btn" class="section-toggle-button">Show Data Log</button>
+    <button id="manage-data-btn" class="section-toggle-button">Manage Data Log</button>
+  </div>
+
+  <!-- Week Plan Section -->
+  <div id="week-plan-section" class="collapsed">
+    <h2>Week Plan</h2>
+    <p id="current-day-time"></p>
+    <div class="mood-buttons">
+      <button id="very-good" class="mood-button">Very Good Mood</button>
+      <button id="good" class="mood-button">Good Mood</button>
+      <button id="neutral" class="mood-button">Neutral Mood</button>
+      <button id="bad" class="mood-button">Bad Mood</button>
+      <button id="very-bad" class="mood-button">Very Bad Mood</button>
+    </div>
+    <button id="confirm-week-plan">Confirm</button>
+  </div>
+
+  <!-- Health Data Section -->
+  <div id="health-data-section" class="collapsed">
+    <h2>Health Data</h2>
+    <div class="health-data-field">
+      <label for="systolic">Systolic Blood Pressure:</label>
+      <input type="number" id="systolic">
+    </div>
+    <div class="health-data-field">
+      <label for="diastolic">Diastolic Blood Pressure:</label>
+      <input type="number" id="diastolic">
+    </div>
+    <div class="health-data-field">
+      <label for="tinnitus">Tinnitus (1=low, 5=high):</label>
+      <button id="tinnitus-1" class="tinnitus-button">1</button>
+      <button id="tinnitus-2" class="tinnitus-button">2</button>
+      <button id="tinnitus-3" class="tinnitus-button">3</button>
+      <button id="tinnitus-4" class="tinnitus-button">4</button>
+      <button id="tinnitus-5" class="tinnitus-button">5</button>
+    </div>
+    <div class="health-data-field">
+      <label for="heart-rate">Heart Rate:</label>
+      <input type="number" id="heart-rate">
+    </div>
+    <button id="confirm-health-data">Confirm</button>
+  </div>
+
+  <!-- Data Table Section -->
+  <div id="data-table-section" class="collapsed">
+    <h2>Data Log</h2>
+    <table id="data-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Weekday</th>
+          <th>Time</th>
+          <th>Mood</th>
+          <th>Systolic</th>
+          <th>Diastolic</th>
+          <th>Tinnitus</th>
+          <th>Heart Rate</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Rows will be added dynamically -->
+      </tbody>
+    </table>
+  </div>
+
+<!-- Manage Data Section -->
+<div id="manage-data-section" class="collapsed">
+  <h2>Manage Data</h2>
+  <button id="export-data">Export Data as CSV</button>
+  <button id="mail-data">Mail Data</button>
+  <button id="delete-data">Delete All Data</button>
+  <button id="store-json">Store Data as JSON</button>
+  <input type="file" id="restore-json" accept=".json" style="display: none;">
+  <button onclick="document.getElementById('restore-json').click()">Restore Data from JSON</button>
+</div>
+
+  <script src="logapp.js"></script>
+</body>
+</html>

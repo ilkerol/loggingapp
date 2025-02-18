@@ -49,6 +49,20 @@
       background-color: #f44336;
     }
 
+    .mood-button, .tinnitus-button, .sport-button, .intensity-button {
+      padding: 10px;
+      margin: 5px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .selected {
+      background-color: #4CAF50 !important;
+    }
+
     .number-input-group {
       display: flex;
       align-items: center;
@@ -72,34 +86,6 @@
       cursor: pointer;
     }
 
-    .mood-button {
-      padding: 10px;
-      margin: 5px;
-      background-color: #666;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .mood-button.selected {
-      background-color: #4CAF50;
-    }
-
-    .tinnitus-button {
-      padding: 10px;
-      margin: 5px;
-      background-color: #666;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .tinnitus-button.selected {
-      background-color: #4CAF50;
-    }
-
     textarea {
       width: 100%;
       height: 80px;
@@ -119,10 +105,27 @@
       border: 1px solid #666;
     }
 
+    .delete-btn {
+      background-color: #f44336;
+      padding: 6px 12px;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
     .toggle-switch {
       position: absolute;
       top: 20px;
       right: 20px;
+      width: 60px;
+      height: 34px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
     }
 
     .slider {
@@ -156,24 +159,51 @@
     input:checked + .slider:before {
       transform: translateX(26px);
     }
+
+    #manage-data-section {
+      display: none;
+      gap: 10px;
+      padding: 15px;
+      border: 1px solid #666;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    #manage-data-section:not(.collapsed) {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .management-button {
+      padding: 10px;
+      margin: 5px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      flex: 1 1 auto;
+    }
+
+    .management-button.delete {
+      background-color: #f44336;
+    }
   </style>
 </head>
 <body class="dark-theme">
   <h1>Logging-App</h1>
   
-  <!-- Theme Toggle -->
   <label class="toggle-switch">
     <input type="checkbox" id="theme-toggle" checked>
     <span class="slider"></span>
   </label>
 
-  <!-- Main Controls -->
   <div class="main-controls">
-    <!-- Week Plan Section -->
+    <!-- Health Section -->
     <div class="section-container">
-      <button id="week-plan-btn" class="section-button">Show Week Plan</button>
-      <div id="week-plan-section" class="collapsed">
-        <h2>Week Plan</h2>
+      <button class="section-button">Show Health Data</button>
+      <div class="collapsed">
         <div class="mood-buttons">
           <button class="mood-button" data-value="very-good">Very Good</button>
           <button class="mood-button" data-value="good">Good</button>
@@ -181,17 +211,7 @@
           <button class="mood-button" data-value="bad">Bad</button>
           <button class="mood-button" data-value="very-bad">Very Bad</button>
         </div>
-        <textarea id="week-comment" placeholder="Optional comment..."></textarea>
-        <button id="confirm-week-plan">Confirm</button>
-      </div>
-    </div>
 
-    <!-- Health Data Section -->
-    <div class="section-container">
-      <button id="health-data-btn" class="section-button">Show Health Data</button>
-      <div id="health-data-section" class="collapsed">
-        <h2>Health Data</h2>
-        
         <div class="number-input-group">
           <button class="number-control minus">-</button>
           <input type="number" id="systolic" min="70" max="200" value="120">
@@ -214,7 +234,7 @@
         </div>
 
         <div class="tinnitus-controls">
-          <label>Tinnitus (1=low, 5=high):</label>
+          <label>Tinnitus (1-5):</label>
           <button class="tinnitus-button" data-value="1">1</button>
           <button class="tinnitus-button" data-value="2">2</button>
           <button class="tinnitus-button" data-value="3">3</button>
@@ -222,16 +242,44 @@
           <button class="tinnitus-button" data-value="5">5</button>
         </div>
 
-        <textarea id="health-comment" placeholder="Optional comment..."></textarea>
-        <button id="confirm-health-data">Confirm</button>
+        <textarea id="health-comment" placeholder="Health comments..."></textarea>
+        <button class="management-button confirm-health">Confirm</button>
+      </div>
+    </div>
+
+    <!-- Food Section -->
+    <div class="section-container">
+      <button class="section-button">Show Food</button>
+      <div class="collapsed">
+        <textarea id="food-input" placeholder="What did you eat?"></textarea>
+        <button class="management-button confirm-food">Confirm</button>
+      </div>
+    </div>
+
+    <!-- Sport Section -->
+    <div class="section-container">
+      <button class="section-button">Show Sport</button>
+      <div class="collapsed">
+        <div class="sport-buttons">
+          <button class="sport-button" data-sport="Cycling">Cycling</button>
+          <button class="sport-button" data-sport="Running">Running</button>
+          <button class="sport-button" data-sport="Workout">Workout</button>
+          <button class="sport-button" data-sport="Other">Other</button>
+        </div>
+        <div class="intensity-buttons">
+          <button class="intensity-button" data-intensity="Light">Light</button>
+          <button class="intensity-button" data-intensity="Medium">Medium</button>
+          <button class="intensity-button" data-intensity="Heavy">Heavy</button>
+        </div>
+        <textarea id="sport-comment" placeholder="Sport comments..."></textarea>
+        <button class="management-button confirm-sport">Confirm</button>
       </div>
     </div>
 
     <!-- Data Log Section -->
     <div class="section-container">
-      <button id="show-log-btn" class="section-button">Show Data Log</button>
-      <div id="data-table-section" class="collapsed">
-        <h2>Data Log</h2>
+      <button class="section-button">Show Data Log</button>
+      <div class="collapsed">
         <table id="data-table">
           <thead>
             <tr>
@@ -242,27 +290,28 @@
               <th>Diastolic</th>
               <th>Heart Rate</th>
               <th>Tinnitus</th>
+              <th>Food</th>
+              <th>Sport</th>
               <th>Comments</th>
               <th>Action</th>
             </tr>
           </thead>
-          <tbody>
-          </tbody>
+          <tbody></tbody>
         </table>
       </div>
     </div>
 
     <!-- Manage Data Section -->
     <div class="section-container">
-      <button id="manage-data-btn" class="section-button">Manage Data</button>
+      <button class="section-button">Show Manage Data</button>
       <div id="manage-data-section" class="collapsed">
-        <h2>Manage Data</h2>
-        <button id="export-data">Export CSV</button>
-        <button id="mail-data">Email Data</button>
-        <button id="delete-data">Delete All</button>
-        <button id="store-json">Backup Data</button>
+        <button id="export-data" class="management-button">Export CSV</button>
+        <button id="mail-data" class="management-button">Email Data</button>
+        <button id="delete-data" class="management-button delete">Delete All</button>
+        <button id="store-json" class="management-button">Backup Data</button>
         <input type="file" id="restore-json" hidden>
-        <button onclick="document.getElementById('restore-json').click()">Restore Backup</button>
+        <button onclick="document.getElementById('restore-json').click()" 
+                class="management-button">Restore Backup</button>
       </div>
     </div>
   </div>

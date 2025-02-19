@@ -162,18 +162,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function resetSection(section) {
-    if (section === 'health') {
-      document.querySelectorAll('.mood-button, .tinnitus-button').forEach(btn => 
-        btn.classList.remove('selected'));
-      document.getElementById('health-comment').value = '';
-    }
-    if (section === 'sport') {
-      document.querySelectorAll('.sport-button, .intensity-button').forEach(btn => 
-        btn.classList.remove('selected'));
-      document.getElementById('sport-comment').value = '';
-    }
+function resetSection(section) {
+  if (section === 'health') {
+    // Clear mood and tinnitus selections
+    document.querySelectorAll('.mood-button, .tinnitus-button').forEach(btn => 
+      btn.classList.remove('selected'));
+    
+    // Clear the comment field
+    document.getElementById('health-comment').value = '';
+    
+    // Keep the current values for:
+    // - Systolic (stays as is)
+    // - Diastolic (stays as is)
+    // - Heart Rate (stays as is)
   }
+  if (section === 'sport') {
+    document.querySelectorAll('.sport-button, .intensity-button').forEach(btn => 
+      btn.classList.remove('selected'));
+    document.getElementById('sport-comment').value = '';
+  }
+}
 
   // Initial Render
   renderTable();

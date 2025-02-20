@@ -17,14 +17,14 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Install dependencies (if needed)
         run: npm install
 
-      - name: Build project (if applicable)
+      - name: Build project (if needed)
         run: npm run build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./  # or your build directory if applicable
+          publish_dir: ./  # Change this to your build directory if applicable

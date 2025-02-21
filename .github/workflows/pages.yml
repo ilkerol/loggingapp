@@ -1,5 +1,25 @@
-- name: Deploy to GitHub Pages
-  uses: peaceiris/actions-gh-pages@v3
-  with:
-    github_token: ${{ secrets.GH_PAT }}  # Use your PAT secret here
-    publish_dir: ./build  # Adjust to your build directory
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]  # Trigger on pushes to main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # Required runner environment
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Add build steps here (e.g., npm install && npm run build)
+      # Example:
+      # - name: Build
+      #   run: |
+      #     npm install
+      #     npm run build
+
+      - name: Deploy to GH Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GH_PAT }}  # Your PAT secret name
+          publish_dir: ./public  # Your build output directory

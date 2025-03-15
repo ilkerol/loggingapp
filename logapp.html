@@ -1,297 +1,341 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Logging-App</title>
-  <style>
-    :root {
-      --dark-bg: #333;
-      --light-bg: #fff;
-      --dark-text: #fff;
-      --light-text: #333;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background-color: var(--dark-bg);
-      color: var(--dark-text);
-    }
-    body.light-theme {
-      background-color: var(--light-bg);
-      color: var(--light-text);
-    }
-    .collapsed {
-      display: none;
-    }
-    .section-container {
-      margin: 15px 0;
-    }
-    .section-button {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      font-size: 18px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .section-button.hide {
-      background-color: #f44336;
-    }
-    .mood-button, .tinnitus-button, .sport-button, .intensity-button {
-      padding: 10px;
-      margin: 5px;
-      background-color: #2196F3;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .selected {
-      background-color: #4CAF50 !important;
-    }
-    .number-input-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 15px 0;
-    }
-    input[type="number"] {
-      width: 100px;
-      padding: 8px;
-      font-size: 16px;
-    }
-    button.number-control {
-      padding: 8px 16px;
-      font-size: 18px;
-      background-color: #666;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    textarea {
-      width: 100%;
-      height: 80px;
-      padding: 10px;
-      margin: 15px 0;
-      font-size: 16px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-    }
-    th, td {
-      padding: 12px;
-      border: 1px solid #666;
-    }
-    .delete-btn {
-      background-color: #f44336;
-      padding: 6px 12px;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .toggle-switch {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 60px;
-      height: 34px;
-    }
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      transition: 0.4s;
-      border-radius: 34px;
-    }
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 26px;
-      width: 26px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: 0.4s;
-      border-radius: 50%;
-    }
-    input:checked + .slider {
-      background-color: #2196F3;
-    }
-    input:checked + .slider:before {
-      transform: translateX(26px);
-    }
-    #manage-data-section {
-      display: none;
-      gap: 10px;
-      padding: 15px;
-      border: 1px solid #666;
-      border-radius: 5px;
-      margin-top: 10px;
-    }
-    #manage-data-section:not(.collapsed) {
-      display: flex;
-      flex-wrap: wrap;
-    }
-    .management-button {
-      padding: 10px;
-      margin: 5px;
-      background-color: #2196F3;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      flex: 1 1 auto;
-    }
-    .management-button.delete {
-      background-color: #f44336;
-    }
-  </style>
-</head>
-<body class="dark-theme">
-  <h1>Logging-App</h1>
-  <label class="toggle-switch">
-    <input type="checkbox" id="theme-toggle" checked>
-    <span class="slider"></span>
-  </label>
-  <div class="main-controls">
-    <!-- Week Plan Section -->
-    <div class="section-container">
-      <button class="section-button">Show Week Plan</button>
-      <div class="collapsed">
-        <div class="mood-buttons">
-          <button class="mood-button" data-value="very-good">Very Good</button>
-          <button class="mood-button" data-value="good">Good</button>
-          <button class="mood-button" data-value="neutral">Neutral</button>
-          <button class="mood-button" data-value="bad">Bad</button>
-          <button class="mood-button" data-value="very-bad">Very Bad</button>
-        </div>
-        <div class="tinnitus-controls">
-          <label>Tinnitus (1-5):</label>
-          <button class="tinnitus-button" data-value="1">1</button>
-          <button class="tinnitus-button" data-value="2">2</button>
-          <button class="tinnitus-button" data-value="3">3</button>
-          <button class="tinnitus-button" data-value="4">4</button>
-          <button class="tinnitus-button" data-value="5">5</button>
-        </div>
-        <textarea id="weekplan-comment" placeholder="Week plan comments..."></textarea>
-        <button class="management-button confirm-weekplan">Confirm</button>
-      </div>
-    </div>
+document.addEventListener('DOMContentLoaded', () => {
+  // Theme Management
+  const themeToggle = document.getElementById('theme-toggle');
+  const body = document.body;
+  body.classList.add('dark-theme');
+  themeToggle.checked = true;
 
-    <!-- Health Section -->
-    <div class="section-container">
-      <button class="section-button">Show Health Data</button>
-      <div class="collapsed">
-        <div class="number-input-group">
-          <button class="number-control minus">-</button>
-          <input type="number" id="systolic" min="70" max="200" value="120">
-          <button class="number-control plus">+</button>
-          <label>Systolic (70-200)</label>
-        </div>
-        <div class="number-input-group">
-          <button class="number-control minus">-</button>
-          <input type="number" id="diastolic" min="30" max="120" value="80">
-          <button class="number-control plus">+</button>
-          <label>Diastolic (30-120)</label>
-        </div>
-        <div class="number-input-group">
-          <button class="number-control minus">-</button>
-          <input type="number" id="heart-rate" min="40" max="180" value="75">
-          <button class="number-control plus">+</button>
-          <label>Heart Rate (40-180)</label>
-        </div>
-        <button class="management-button confirm-health">Confirm</button>
-      </div>
-    </div>
+  themeToggle.addEventListener('change', () => {
+    body.classList.toggle('dark-theme');
+    body.classList.toggle('light-theme');
+  });
 
-    <!-- Food Section -->
-    <div class="section-container">
-      <button class="section-button">Show Food</button>
-      <div class="collapsed">
-        <textarea id="food-input" placeholder="What did you eat?"></textarea>
-        <button class="management-button confirm-food">Confirm</button>
-      </div>
-    </div>
+  // Section Toggle Logic
+  document.querySelectorAll('.section-button').forEach(button => {
+    const section = button.nextElementSibling;
+    button.textContent = section.classList.contains('collapsed') 
+      ? button.textContent.replace('Hide', 'Show')
+      : button.textContent.replace('Show', 'Hide');
+    
+    button.addEventListener('click', function() {
+      section.classList.toggle('collapsed');
+      this.classList.toggle('hide');
+      
+      if (section.classList.contains('collapsed')) {
+        this.textContent = this.textContent.replace('Hide', 'Show');
+      } else {
+        this.textContent = this.textContent.replace('Show', 'Hide');
+      }
+    });
+  });
 
-    <!-- Sport Section -->
-    <div class="section-container">
-      <button class="section-button">Show Sport</button>
-      <div class="collapsed">
-        <div class="sport-buttons">
-          <button class="sport-button" data-sport="Cycling">Cycling</button>
-          <button class="sport-button" data-sport="Running">Running</button>
-          <button class="sport-button" data-sport="Workout">Workout</button>
-          <button class="sport-button" data-sport="Other">Other</button>
-        </div>
-        <div class="intensity-buttons">
-          <button class="intensity-button" data-intensity="Light">Light</button>
-          <button class="intensity-button" data-intensity="Medium">Medium</button>
-          <button class="intensity-button" data-intensity="Heavy">Heavy</button>
-        </div>
-        <textarea id="sport-comment" placeholder="Sport comments..."></textarea>
-        <button class="management-button confirm-sport">Confirm</button>
-      </div>
-    </div>
+  // Number Controls
+  document.querySelectorAll('.number-control').forEach(button => {
+    button.addEventListener('click', (e) => {
+      const input = e.target.parentElement.querySelector('input[type="number"]');
+      const step = e.target.classList.contains('plus') ? 1 : -1;
+      input.value = Math.min(
+        Math.max(parseInt(input.value) + step, parseInt(input.min)),
+        parseInt(input.max)
+      );
+    });
+  });
 
-    <!-- Data Log Section -->
-    <div class="section-container">
-      <button class="section-button">Show Data Log</button>
-      <div class="collapsed">
-        <table id="data-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Mood</th>
-              <th>Systolic</th>
-              <th>Diastolic</th>
-              <th>Heart Rate</th>
-              <th>Tinnitus</th>
-              <th>Food</th>
-              <th>Sport</th>
-              <th>Comments</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
+  // Selection Handling
+  function setupSelection(selector) {
+    document.querySelectorAll(selector).forEach(button => {
+      button.addEventListener('click', (e) => {
+        document.querySelectorAll(`${selector}.selected`).forEach(btn => 
+          btn.classList.remove('selected'));
+        e.target.classList.add('selected');
+      });
+    });
+  }
 
-    <!-- Manage Data Section -->
-    <div class="section-container">
-      <button class="section-button">Show Manage Data</button>
-      <div id="manage-data-section" class="collapsed">
-        <button id="export-data" class="management-button">Export CSV</button>
-        <button id="export-weekplan" class="management-button">Export Week Plan</button>
-        <button id="mail-data" class="management-button">Email Data</button>
-        <button id="delete-data" class="management-button delete">Delete All</button>
-        <button id="store-json" class="management-button">Backup Data</button>
-        <input type="file" id="restore-json" hidden>
-        <button onclick="document.getElementById('restore-json').click()" 
-                class="management-button">Restore Backup</button>
-      </div>
-    </div>
-  </div>
-  <script src="logapp.js"></script>
-</body>
-</html>
+  setupSelection('.mood-button');
+  setupSelection('.tinnitus-button');
+  setupSelection('.sport-button');
+  setupSelection('.intensity-button');
+
+  // Data Storage
+  let dataTable = JSON.parse(localStorage.getItem('dataTable')) || [];
+
+  // Confirm Week Plan
+  document.querySelector('.confirm-weekplan').addEventListener('click', () => {
+    const entry = {
+      date: new Date().toLocaleDateString(),
+      time: new Date().toLocaleTimeString(),
+      mood: document.querySelector('.mood-button.selected')?.dataset.value,
+      tinnitus: document.querySelector('.tinnitus-button.selected')?.dataset.value,
+      comment: document.getElementById('weekplan-comment').value,
+      timestamp: Date.now()
+    };
+
+    if (!entry.mood && !entry.tinnitus && !entry.comment) {
+      alert('Please enter at least one week plan data point');
+      return;
+    }
+
+    dataTable.unshift(entry);
+    saveData();
+    renderTable();
+    resetSection('weekplan');
+  });
+
+  // Confirm Health Data
+  document.querySelector('.confirm-health').addEventListener('click', () => {
+    const entry = {
+      date: new Date().toLocaleDateString(),
+      time: new Date().toLocaleTimeString(),
+      systolic: document.getElementById('systolic').value,
+      diastolic: document.getElementById('diastolic').value,
+      heartRate: document.getElementById('heart-rate').value,
+      timestamp: Date.now()
+    };
+
+    if (!entry.systolic && !entry.diastolic && !entry.heartRate) {
+      alert('Please enter at least one health data point');
+      return;
+    }
+
+    dataTable.unshift(entry);
+    saveData();
+    renderTable();
+    resetSection('health');
+  });
+
+  // Confirm Food
+  document.querySelector('.confirm-food').addEventListener('click', () => {
+    const food = document.getElementById('food-input').value.trim();
+    if (!food) {
+      alert('Please enter food information');
+      return;
+    }
+
+    dataTable.unshift({
+      date: new Date().toLocaleDateString(),
+      time: new Date().toLocaleTimeString(),
+      food: food,
+      timestamp: Date.now()
+    });
+
+    saveData();
+    renderTable();
+    document.getElementById('food-input').value = '';
+  });
+
+  // Confirm Sport
+  document.querySelector('.confirm-sport').addEventListener('click', () => {
+    const sport = document.querySelector('.sport-button.selected');
+    const intensity = document.querySelector('.intensity-button.selected');
+    
+    if (!sport || !intensity) {
+      alert('Please select both sport and intensity');
+      return;
+    }
+
+    dataTable.unshift({
+      date: new Date().toLocaleDateString(),
+      time: new Date().toLocaleTimeString(),
+      sport: `${sport.dataset.sport} (${intensity.dataset.intensity})`,
+      comment: document.getElementById('sport-comment').value.trim(),
+      timestamp: Date.now()
+    });
+
+    saveData();
+    renderTable();
+    resetSection('sport');
+  });
+
+  // Data Management
+  function saveData() {
+    localStorage.setItem('dataTable', JSON.stringify(dataTable));
+  }
+
+  function renderTable() {
+    const tbody = document.querySelector('#data-table tbody');
+    tbody.innerHTML = dataTable.map(entry => `
+      <tr>
+        <td>${entry.date}</td>
+        <td>${entry.time}</td>
+        <td>${entry.mood || ''}</td>
+        <td>${entry.systolic || ''}</td>
+        <td>${entry.diastolic || ''}</td>
+        <td>${entry.heartRate || ''}</td>
+        <td>${entry.tinnitus || ''}</td>
+        <td>${entry.food || ''}</td>
+        <td>${entry.sport || ''}</td>
+        <td>${entry.comment || ''}</td>
+        <td><button class="delete-btn" data-timestamp="${entry.timestamp}">Delete</button></td>
+      </tr>
+    `).join('');
+
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        dataTable = dataTable.filter(e => e.timestamp !== parseInt(btn.dataset.timestamp));
+        saveData();
+        renderTable();
+      });
+    });
+  }
+
+  function resetSection(section) {
+    if (section === 'health') {
+      document.getElementById('systolic').value = 120;
+      document.getElementById('diastolic').value = 80;
+      document.getElementById('heart-rate').value = 75;
+    }
+    if (section === 'weekplan') {
+      document.querySelectorAll('.mood-button, .tinnitus-button').forEach(btn => 
+        btn.classList.remove('selected'));
+      document.getElementById('weekplan-comment').value = '';
+    }
+    if (section === 'sport') {
+      document.querySelectorAll('.sport-button, .intensity-button').forEach(btn => 
+        btn.classList.remove('selected'));
+      document.getElementById('sport-comment').value = '';
+    }
+  }
+
+  // Export Functions
+  document.getElementById('export-data').addEventListener('click', () => {
+    if (dataTable.length === 0) {
+      alert('No data to export');
+      return;
+    }
+    
+    const dateString = new Date().toISOString().split('T')[0].replace(/-/g, '_');
+    const csvContent = 'data:text/csv;charset=utf-8,' +
+      'Date,Time,Mood,Systolic,Diastolic,Heart Rate,Tinnitus,Food,Sport,Comments\n' +
+      dataTable.map(e => [
+        e.date, e.time, e.mood || '', e.systolic || '', e.diastolic || '',
+        e.heartRate || '', e.tinnitus || '', e.food || '', e.sport || '', e.comment || ''
+      ].map(v => `"${v}"`).join(',')).join('\n');
+
+    const link = document.createElement('a');
+    link.href = encodeURI(csvContent);
+    link.download = `${dateString}_full_export.csv`;
+    link.click();
+  });
+
+  document.getElementById('export-weekplan').addEventListener('click', () => {
+    const weekPlanData = dataTable.filter(entry => entry.mood || entry.tinnitus);
+    if (weekPlanData.length === 0) {
+      alert('No Week Plan data to export');
+      return;
+    }
+    
+    const dateString = new Date().toISOString().split('T')[0].replace(/-/g, '_');
+    const csvContent = 'data:text/csv;charset=utf-8,' +
+      'Date,Time,Mood,Tinnitus,Comments\n' +
+      weekPlanData.map(e => [
+        e.date, e.time, 
+        e.mood || '', 
+        e.tinnitus || '', 
+        e.comment || ''
+      ].map(v => `"${v}"`).join(',')).join('\n');
+
+    const link = document.createElement('a');
+    link.href = encodeURI(csvContent);
+    link.download = `${dateString}_weekplan_export.csv`;
+    link.click();
+  });
+
+  // Email Data
+  document.getElementById('mail-data').addEventListener('click', () => {
+    if (dataTable.length === 0) {
+      alert('No data to email');
+      return;
+    }
+    
+    const csvData = 'Date,Time,Mood,Systolic,Diastolic,Heart Rate,Tinnitus,Food,Sport,Comments\n' +
+      dataTable.map(e => [
+        e.date, e.time, e.mood || '', e.systolic || '', e.diastolic || '',
+        e.heartRate || '', e.tinnitus || '', e.food || '', e.sport || '', e.comment || ''
+      ].map(v => `"${v}"`).join(',')).join('\n');
+
+    const mailtoLink = `mailto:ilker.berlin@googlemail.com?subject=Health%20Data%20Export&body=${encodeURIComponent(csvData)}`;
+    window.location.href = mailtoLink;
+  });
+
+  // Backup/Restore
+  document.getElementById('store-json').addEventListener('click', () => {
+    if (dataTable.length === 0) {
+      alert('No data to backup');
+      return;
+    }
+    
+    const dateString = new Date().toISOString().split('T')[0].replace(/-/g, '_');
+    const dataStr = JSON.stringify(dataTable);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${dateString}_backup.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('restore-json').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const importedData = JSON.parse(event.target.result);
+        dataTable = importedData;
+        saveData();
+        renderTable();
+        alert(`Successfully imported ${dataTable.length} entries from JSON!`);
+      } catch (error) {
+        alert('Invalid JSON file: ' + error.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('restore-csv').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const csvData = event.target.result;
+        const lines = csvData.split('\n');
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/ /g, ''));
+        
+        dataTable = lines.slice(1).filter(line => line.trim()).map(line => {
+          const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => 
+            v.trim().replace(/^"(.*)"$/, '$1')
+          );
+          
+          return {
+            date: values[headers.indexOf('date')] || '',
+            time: values[headers.indexOf('time')] || '',
+            mood: values[headers.indexOf('mood')] || '',
+            systolic: values[headers.indexOf('systolic')] || '',
+            diastolic: values[headers.indexOf('diastolic')] || '',
+            heartRate: values[headers.indexOf('heartrate')] || '',
+            tinnitus: values[headers.indexOf('tinnitus')] || '',
+            food: values[headers.indexOf('food')] || '',
+            sport: values[headers.indexOf('sport')] || '',
+            comment: values[headers.indexOf('comments')] || '',
+            timestamp: Date.now()
+          };
+        });
+
+        saveData();
+        renderTable();
+        alert(`Successfully imported ${dataTable.length} entries from CSV!`);
+      } catch (error) {
+        alert('Error parsing CSV file: ' + error.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Initial Render
+  renderTable();
+});

@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Delete All Data Functionality
+  // Delete All Functionality
   const modal = document.getElementById('confirmation-modal');
   
   document.getElementById('delete-data').addEventListener('click', () => {
@@ -228,6 +228,84 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Keep all other existing functions (export, email, backup/restore)
-  // ... [Rest of the code remains unchanged]
+  // Backup/Restore Functionality
+  document.getElementById('store-json').addEventListener('click', () => {
+    if (dataTable.length === 0) {
+      alert('No data to backup');
+      return;
+    }
+    
+    const dateString = new Date().toISOString().split('T')[0].replace(/-/g, '_');
+    const dataStr = JSON.stringify(dataTable);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${dateString}_backup.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('restore-json').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const importedData = JSON.parse(event.target.result);
+        dataTable = importedData;
+        saveData();
+        renderTable();
+        alert(`Successfully imported ${dataTable.length} entries from JSON!`);
+      } catch (error) {
+        alert('Invalid JSON file: ' + error.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('restore-csv').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const csvData = event.target.result;
+        const lines = csvData.split('\n');
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/ /g, ''));
+        
+        dataTable = lines.slice(1).filter(line => line.trim()).map(line => {
+          const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => 
+            v.trim().replace(/^"(.*)"$/, '$1')
+          );
+          
+          return {
+            date: values[headers.indexOf('date')] || '',
+            time: values[headers.indexOf('time')] || '',
+            mood: values[headers.indexOf('mood')] || '',
+            systolic: values[headers.indexOf('systolic')] || '',
+            diastolic: values[headers.indexOf('diastolic')] || '',
+            heartRate: values[headers.indexOf('heartrate')] || '',
+            tinnitus: values[headers.indexOf('tinnitus')] || '',
+            food: values[headers.indexOf('food')] || '',
+            sport: values[headers.indexOf('sport')] || '',
+            comment: values[headers.indexOf('comments')] || '',
+            timestamp: Date.now()
+          };
+        });
+
+        saveData();
+        renderTable();
+        alert(`Successfully imported ${dataTable.length} entries from CSV!`);
+      } catch (error) {
+        alert('Error parsing CSV file: ' + error.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Initial Render
+  renderTable();
 });

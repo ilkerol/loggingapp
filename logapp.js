@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Data Storage
   let dataTable = JSON.parse(localStorage.getItem('dataTable')) || [];
 
-  // Week Plan Confirmation (Fixed)
+  // Confirm Week Plan
   document.querySelector('.confirm-weekplan').addEventListener('click', () => {
     const entry = {
       date: new Date().toLocaleDateString(),
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resetSection('weekplan');
   });
 
-  // Health Confirmation (Fixed)
+  // Confirm Health Data
   document.querySelector('.confirm-health').addEventListener('click', () => {
     const entry = {
       date: new Date().toLocaleDateString(),
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resetSection('health');
   });
 
-  // Food Confirmation
+  // Confirm Food
   document.querySelector('.confirm-food').addEventListener('click', () => {
     const food = document.getElementById('food-input').value.trim();
     if (!food) {
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('food-input').value = '';
   });
 
-  // Sport Confirmation
+  // Confirm Sport
   document.querySelector('.confirm-sport').addEventListener('click', () => {
     const sport = document.querySelector('.sport-button.selected');
     const intensity = document.querySelector('.intensity-button.selected');
@@ -179,7 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Reset Sections (Updated)
   function resetSection(section) {
     if (section === 'health') {
       document.getElementById('systolic').value = 120;
@@ -198,7 +197,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Export Week Plan (New)
+  // Export Functions
+  document.getElementById('export-data').addEventListener('click', () => {
+    if (dataTable.length === 0) {
+      alert('No data to export');
+      return;
+    }
+    
+    const dateString = new Date().toISOString().split('T')[0].replace(/-/g, '_');
+    const csvContent = 'data:text/csv;charset=utf-8,' +
+      'Date,Time,Mood,Systolic,Diastolic,Heart Rate,Tinnitus,Food,Sport,Comments\n' +
+      dataTable.map(e => [
+        e.date, e.time, e.mood || '', e.systolic || '', e.diastolic || '',
+        e.heartRate || '', e.tinnitus || '', e.food || '', e.sport || '', e.comment || ''
+      ].map(v => `"${v}"`).join(',')).join('\n');
+
+    const link = document.createElement('a');
+    link.href = encodeURI(csvContent);
+    link.download = `${dateString}_full_export.csv`;
+    link.click();
+  });
+
   document.getElementById('export-weekplan').addEventListener('click', () => {
     const weekPlanData = dataTable.filter(entry => entry.mood || entry.tinnitus);
     if (weekPlanData.length === 0) {
@@ -218,10 +237,105 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const link = document.createElement('a');
     link.href = encodeURI(csvContent);
-    link.download = `${dateString}_weekplan.csv`;
+    link.download = `${dateString}_weekplan_export.csv`;
     link.click();
   });
 
-  // Keep the rest of your existing export/import code below...
-  // [Rest of your existing code for other exports/imports]
+  // Email Data
+  document.getElementById('mail-data').addEventListener('click', () => {
+    if (dataTable.length === 0) {
+      alert('No data to email');
+      return;
+    }
+    
+    const csvData = 'Date,Time,Mood,Systolic,Diastolic,Heart Rate,Tinnitus,Food,Sport,Comments\n' +
+      dataTable.map(e => [
+        e.date, e.time, e.mood || '', e.systolic || '', e.diastolic || '',
+        e.heartRate || '', e.tinnitus || '', e.food || '', e.sport || '', e.comment || ''
+      ].map(v => `"${v}"`).join(',')).join('\n');
+
+    const mailtoLink = `mailto:ilker.berlin@googlemail.com?subject=Health%20Data%20Export&body=${encodeURIComponent(csvData)}`;
+    window.location.href = mailtoLink;
+  });
+
+  // Backup/Restore
+  document.getElementById('store-json').addEventListener('click', () => {
+    if (dataTable.length === 0) {
+      alert('No data to backup');
+      return;
+    }
+    
+    const dateString = new Date().toISOString().split('T')[0].replace(/-/g, '_');
+    const dataStr = JSON.stringify(dataTable);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${dateString}_backup.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('restore-json').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const importedData = JSON.parse(event.target.result);
+        dataTable = importedData;
+        saveData();
+        renderTable();
+        alert(`Successfully imported ${dataTable.length} entries from JSON!`);
+      } catch (error) {
+        alert('Invalid JSON file: ' + error.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('restore-csv').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const csvData = event.target.result;
+        const lines = csvData.split('\n');
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/ /g, ''));
+        
+        dataTable = lines.slice(1).filter(line => line.trim()).map(line => {
+          const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => 
+            v.trim().replace(/^"(.*)"$/, '$1')
+          );
+          
+          return {
+            date: values[headers.indexOf('date')] || '',
+            time: values[headers.indexOf('time')] || '',
+            mood: values[headers.indexOf('mood')] || '',
+            systolic: values[headers.indexOf('systolic')] || '',
+            diastolic: values[headers.indexOf('diastolic')] || '',
+            heartRate: values[headers.indexOf('heartrate')] || '',
+            tinnitus: values[headers.indexOf('tinnitus')] || '',
+            food: values[headers.indexOf('food')] || '',
+            sport: values[headers.indexOf('sport')] || '',
+            comment: values[headers.indexOf('comments')] || '',
+            timestamp: Date.now()
+          };
+        });
+
+        saveData();
+        renderTable();
+        alert(`Successfully imported ${dataTable.length} entries from CSV!`);
+      } catch (error) {
+        alert('Error parsing CSV file: ' + error.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  // Initial Render
+  renderTable();
 });

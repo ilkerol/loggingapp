@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', () => {
   // Theme Management
   const themeToggle = document.getElementById('theme-toggle');
@@ -57,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSelection('.sport-button');
   setupSelection('.intensity-button');
 
+  
   // Data Storage
   let dataTable = JSON.parse(localStorage.getItem('dataTable')) || [];
 

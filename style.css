@@ -78,11 +78,11 @@ body {
 
 .data-table {
   width: 90%;
-  /* overflow-y: auto; Let table-wrapper handle vertical scroll if needed */
-  /* max-height: 400px; Remove fixed height, let content dictate or use viewport units */
   margin: 20px auto;
   border: 1px solid var(--surface2);
   border-radius: 5px;
+  display: flex; /* Use flexbox to manage scrollbar-top and table-wrapper */
+  flex-direction: column;
 }
 
 table {
@@ -90,24 +90,28 @@ table {
   border-collapse: collapse;
   background-color: var(--surface);
   font-size: 16px;
-  min-width: 1200px; /* Important for horizontal scrolling of wide tables */
+  min-width: 1200px;
+  direction: ltr; /* Ensure table content itself is LTR */
 }
 
 th,
 td {
   padding: 12px;
-  text-align: left;
+  text-align: left; /* Default for LTR, but good to be explicit */
   border-bottom: 1px solid var(--bg);
   white-space: nowrap;
 }
 
+/* Ensure th text alignment is left for LTR content inside RTL wrapper */
 th {
   background-color: var(--surface2);
   color: var(--text);
   position: sticky;
   top: 0;
   z-index: 10;
+  text-align: left; 
 }
+
 
 .radio-group {
   display: flex;
@@ -208,55 +212,61 @@ textarea {
 .scrollbar-top {
   overflow-x: auto;
   overflow-y: hidden;
-  height: 25px; /* Increased height for better touch target */
+  height: 25px; 
   background-color: var(--bg);
-  /* For Firefox scrollbar styling */
   scrollbar-width: auto; 
   scrollbar-color: var(--surface2) var(--bg);
+  direction: ltr; /* Ensure top scrollbar itself is LTR */
 }
 
-/* WebKit scrollbar styling for .scrollbar-top */
 .scrollbar-top::-webkit-scrollbar {
   height: 12px; 
 }
 .scrollbar-top::-webkit-scrollbar-track {
-  background: var(--surface); /* Slightly different for contrast if desired */
+  background: var(--surface);
   border-radius: 6px;
 }
 .scrollbar-top::-webkit-scrollbar-thumb {
   background-color: var(--surface2);
   border-radius: 6px;
-  border: 2px solid var(--surface); /* "Padding" effect around the thumb */
+  border: 2px solid var(--surface);
 }
 .scrollbar-top::-webkit-scrollbar-thumb:hover {
   background-color: var(--blue);
 }
 
 .table-wrapper {
-  overflow-x: auto;
-  max-height: 400px; /* Or adjust as needed, e.g., using viewport units like 50vh */
-  /* WebKit scrollbar styling for .table-wrapper (main table scroll) */
+  overflow-x: auto; /* For horizontal scroll of the table */
+  overflow-y: auto; /* For vertical scroll of the table */
+  max-height: 400px; 
+  direction: rtl; /* Force scrollbar to the "end" which is left in RTL */
+
+  /* WebKit scrollbar styling for .table-wrapper */
 }
 .table-wrapper::-webkit-scrollbar {
-  height: 12px; /* For horizontal scrollbar */
-  width: 12px;  /* For vertical scrollbar if content overflows max-height */
+  height: 12px; /* Horizontal scrollbar thickness */
+  width: 25px;  /* << VERTICAL SCROLLBAR WIDTH (matching .scrollbar-top height) */
 }
 .table-wrapper::-webkit-scrollbar-track {
   background: var(--surface);
   border-radius: 6px;
 }
+/* Styling for both vertical and horizontal thumbs in table-wrapper */
 .table-wrapper::-webkit-scrollbar-thumb {
   background-color: var(--surface2);
   border-radius: 6px;
-  border: 2px solid var(--surface);
+  border: 2px solid var(--surface); /* Creates a "padding" effect */
 }
 .table-wrapper::-webkit-scrollbar-thumb:hover {
   background-color: var(--blue);
 }
+
 /* Firefox scrollbar styling for .table-wrapper */
 .table-wrapper {
-  scrollbar-width: auto;
-  scrollbar-color: var(--surface2) var(--surface);
+  scrollbar-width: auto; /* Or 'thin'. 'auto' might be better for making it wider. */
+                           /* Firefox doesn't allow explicit width like WebKit's ::-webkit-scrollbar { width: ... } */
+                           /* The perceived width will be the browser default for 'auto' */
+  scrollbar-color: var(--surface2) var(--surface); /* thumb track */
 }
 
 
@@ -272,14 +282,14 @@ textarea {
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  padding: 15px; /* Add padding for modal on small screens */
+  padding: 15px;
 }
 
 .modal-content {
   background-color: var(--surface);
   padding: 30px;
   border-radius: 8px;
-  width: 100%; /* Allow it to use padding from overlay */
+  width: 100%;
   max-width: 400px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   color: var(--text);
@@ -363,21 +373,21 @@ textarea {
   }
 
   .menu-bar {
-    width: 98%; /* Use more screen width */
+    width: 98%;
     gap: 3px;
-    flex-wrap: wrap; /* Allow buttons to wrap if they don't fit */
+    flex-wrap: wrap;
   }
 
   .menu-bar button {
-    padding: 12px 8px; /* Adjusted padding */
-    font-size: 0.9rem; /* Smaller font */
-    min-width: calc(20% - 4px); /* Try to fit 5 buttons, adjust as needed */
-    flex-grow: 1; /* Allow them to grow to fill space */
+    padding: 12px 8px;
+    font-size: 0.9rem;
+    min-width: calc(20% - 4px);
+    flex-grow: 1;
   }
 
   .input-section,
   .data-table {
-    width: 98%; /* Use more screen width */
+    width: 98%;
   }
 
   .input-content {
@@ -386,38 +396,28 @@ textarea {
 
   table {
     font-size: 14px;
-    /* min-width: 0; /* Remove if table MUST scroll. Keep if columns can wrap/shrink. */
-    /* If you keep min-width: 1200px, horizontal scroll is expected. */
   }
 
   th, td {
-    padding: 10px 6px; /* Adjusted padding */
+    padding: 10px 6px;
   }
 
   .scrollbar-top {
-    height: 30px; /* Even larger touch target for the top scrollbar on mobile */
+    height: 30px; 
   }
   .scrollbar-top::-webkit-scrollbar {
-    height: 16px; /* Taller scrollbar track on mobile */
+    height: 16px; 
   }
    .scrollbar-top::-webkit-scrollbar-thumb {
     border-width: 3px; 
   }
 
   .table-wrapper {
-    max-height: 60vh; /* Use viewport height for table scroll area on mobile */
+    max-height: 60vh;
   }
   .table-wrapper::-webkit-scrollbar {
-    height: 16px;
-    width: 16px;
-  }
-
-  .modal-content {
-    padding: 20px; /* Slightly less padding in modal on mobile */
-  }
-  .modal-btn {
-    padding: 10px 15px; /* Adjust button padding in modal */
-    font-size: 0.95rem;
+    height: 16px; /* Horizontal scrollbar thickness on mobile */
+    width: 30px;  /* << VERTICAL SCROLLBAR WIDTH for mobile (matching .scrollbar-top height) */
   }
 }
 
@@ -425,11 +425,9 @@ textarea {
   .menu-bar button {
     font-size: 0.8rem;
     padding: 10px 5px;
-    /* For very small screens, maybe 2 or 3 buttons per row */
-    /* min-width: calc(33.33% - 4px); */
   }
   table {
-      font-size: 12px; /* Even smaller for very narrow screens if necessary */
+      font-size: 12px;
   }
   th, td {
       padding: 8px 4px;

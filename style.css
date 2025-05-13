@@ -1,0 +1,325 @@
+:root {
+  --bg: #1e1e2e;
+  --surface: #302d41;
+  --text: #d9e0ee;
+  --blue: #96cdfb;
+  --green: #abe9b3;
+  --red: #f28fad;
+  --yellow: #fae3b0;
+  --surface2: #575268;
+  --textfield: #f5e0dc;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  font-size: 18px;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.menu-bar {
+  display: flex;
+  width: 90%;
+  margin: 0 auto 20px;
+  gap: 5px;
+}
+
+.menu-bar button {
+  flex: 1;
+  padding: 20px;
+  margin: 0;
+  border: none;
+  border-radius: 5px;
+  background-color: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.4rem;
+}
+
+.menu-bar button.active {
+  background-color: var(--green);
+  color: var(--bg);
+}
+
+.input-section {
+  height: 0;
+  overflow: hidden;
+  transition: height 0.3s ease;
+  background-color: var(--surface);
+  border-radius: 5px;
+  margin: 10px auto;
+  width: 90%;
+}
+
+.input-content {
+  /* Added to ensure consistent padding inside input-section */
+  padding: 15px;
+  box-sizing: border-box;
+}
+
+.data-table {
+  width: 90%;
+  overflow-y: auto; /* Changed from overflow:auto; to prevent vertical scrollbar on table itself if not needed */
+  max-height: 400px; /* Changed from height to max-height for flexibility */
+  margin: 20px auto;
+  border: 1px solid var(--surface2); /* Added border for better definition */
+  border-radius: 5px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--surface);
+  font-size: 16px;
+  min-width: 1200px; /* For horizontal scrolling */
+}
+
+th,
+td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--bg);
+  white-space: nowrap;
+}
+
+th {
+  background-color: var(--surface2); /* Changed for better contrast */
+  color: var(--text);
+  position: sticky;
+  top: 0; /* For vertical sticky header */
+  z-index: 10;
+}
+
+/* Sticky first column (optional, can be complex with horizontal scroll) */
+/* th:first-child, td:first-child {
+  position: sticky;
+  left: 0;
+  background-color: var(--surface);
+  z-index: 5;
+}
+th:first-child {
+  background-color: var(--surface2);
+  z-index: 15;
+} */
+
+.radio-group {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 10px; /* Adjusted margin */
+}
+
+.radio-label {
+  /* Added for labels like "Tinnitus (1-5):" */
+  margin-right: 10px;
+  align-self: center;
+}
+
+.radio-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 5px;
+  background-color: var(
+    --surface2
+  ); /* Changed for better contrast with parent */
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.radio-btn.active {
+  background-color: var(--green);
+  color: var(--bg);
+}
+
+.number-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px; /* Adjusted margin */
+}
+
+.num-btn {
+  padding: 8px 16px;
+  background-color: var(--green);
+  color: var(--bg);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+input[type="number"] {
+  width: 80px;
+  padding: 8px;
+  text-align: center;
+  background-color: var(--textfield);
+  border: none;
+  color: var(--bg);
+  border-radius: 3px;
+}
+
+input[type="text"],
+textarea {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  background-color: var(--textfield);
+  border: none;
+  color: var(--bg);
+  border-radius: 3px;
+}
+
+.delete-btn {
+  background-color: var(--red);
+  color: var(--bg);
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  /* position: sticky; Consider if sticky delete button is desired */
+  /* right: 0; */
+}
+
+.export-btn {
+  width: 100%;
+  padding: 12px;
+  margin: 5px 0;
+  background-color: var(--surface2); /* Changed for consistency */
+  border: none;
+  border-radius: 5px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.export-btn:hover {
+  background-color: var(--blue);
+  color: var(--bg);
+}
+.export-btn:disabled {
+  background-color: #413e52;
+  cursor: not-allowed;
+  color: #777;
+}
+
+.scrollbar-top {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 1px; /* Make it nearly invisible, just for functionality */
+  background-color: var(--bg); /* Match body background */
+}
+.scrollbar-top::-webkit-scrollbar {
+  /* Hide scrollbar for webkit */
+  height: 0px;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  max-height: calc(400px - 20px); /* Adjust if scrollbar-top height changes */
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: var(--surface);
+  padding: 30px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  color: var(--text);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  color: var(--blue);
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.modal-content p {
+  margin-bottom: 15px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.modal-content input[type="email"],
+.modal-content input[type="password"] {
+  width: 100%; /* Full width */
+  padding: 12px;
+  margin-bottom: 15px;
+  box-sizing: border-box; /* Include padding in width */
+  background-color: var(--textfield);
+  border: 1px solid var(--surface2);
+  border-radius: 4px;
+  color: var(--bg);
+  font-size: 1rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition:
+    background-color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.modal-btn.confirm-btn {
+  background-color: var(--green);
+  color: var(--bg);
+}
+.modal-btn.confirm-btn:hover {
+  background-color: #8fdb97; /* Lighter green */
+}
+.modal-btn.confirm-btn:disabled {
+  background-color: #5f8a63;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.modal-btn.cancel-btn {
+  background-color: var(--surface2);
+  color: var(--text);
+}
+.modal-btn.cancel-btn:hover {
+  background-color: #6a657d; /* Lighter surface2 */
+}
+
+.error-message {
+  color: var(--red);
+  margin-top: 15px;
+  font-size: 0.9rem;
+  text-align: center;
+}

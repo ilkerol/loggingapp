@@ -18,7 +18,7 @@
 }
 
 html {
-  overflow-x: hidden; /* Prevent horizontal scroll on the html element itself */
+  overflow-x: hidden; 
 }
 
 body {
@@ -28,7 +28,7 @@ body {
   background-color: var(--bg);
   color: var(--text);
   font-size: 18px;
-  overflow-x: hidden; /* Prevent horizontal scroll on the body too, caused by wide content */
+  overflow-x: hidden; 
 }
 
 .container {
@@ -81,8 +81,7 @@ body {
   margin: 20px auto;
   border: 1px solid var(--surface2);
   border-radius: 5px;
-  display: flex; /* Use flexbox to manage scrollbar-top and table-wrapper */
-  flex-direction: column;
+  /* Removed flex from here, as top-scrollbar and table-wrapper are distinct */
 }
 
 table {
@@ -90,26 +89,23 @@ table {
   border-collapse: collapse;
   background-color: var(--surface);
   font-size: 16px;
-  min-width: 1200px;
-  direction: ltr; /* Ensure table content itself is LTR */
+  min-width: 1200px; 
 }
 
 th,
 td {
   padding: 12px;
-  text-align: left; /* Default for LTR, but good to be explicit */
+  text-align: left; 
   border-bottom: 1px solid var(--bg);
   white-space: nowrap;
 }
 
-/* Ensure th text alignment is left for LTR content inside RTL wrapper */
 th {
   background-color: var(--surface2);
   color: var(--text);
   position: sticky;
   top: 0;
   z-index: 10;
-  text-align: left; 
 }
 
 
@@ -216,7 +212,6 @@ textarea {
   background-color: var(--bg);
   scrollbar-width: auto; 
   scrollbar-color: var(--surface2) var(--bg);
-  direction: ltr; /* Ensure top scrollbar itself is LTR */
 }
 
 .scrollbar-top::-webkit-scrollbar {
@@ -236,26 +231,25 @@ textarea {
 }
 
 .table-wrapper {
-  overflow-x: auto; /* For horizontal scroll of the table */
-  overflow-y: auto; /* For vertical scroll of the table */
+  overflow-x: auto; 
+  overflow-y: auto; /* Enable vertical scroll */
   max-height: 400px; 
-  direction: rtl; /* Force scrollbar to the "end" which is left in RTL */
+  /* Removed direction: rtl */
 
   /* WebKit scrollbar styling for .table-wrapper */
 }
 .table-wrapper::-webkit-scrollbar {
   height: 12px; /* Horizontal scrollbar thickness */
-  width: 25px;  /* << VERTICAL SCROLLBAR WIDTH (matching .scrollbar-top height) */
+  width: 18px;  /* << INCREASED VERTICAL SCROLLBAR WIDTH for WebKit */
 }
 .table-wrapper::-webkit-scrollbar-track {
-  background: var(--surface);
+  background: var(--surface); /* Or var(--bg) */
   border-radius: 6px;
 }
-/* Styling for both vertical and horizontal thumbs in table-wrapper */
 .table-wrapper::-webkit-scrollbar-thumb {
   background-color: var(--surface2);
   border-radius: 6px;
-  border: 2px solid var(--surface); /* Creates a "padding" effect */
+  border: 2px solid var(--surface); /* Or var(--bg) to match track */
 }
 .table-wrapper::-webkit-scrollbar-thumb:hover {
   background-color: var(--blue);
@@ -263,14 +257,15 @@ textarea {
 
 /* Firefox scrollbar styling for .table-wrapper */
 .table-wrapper {
-  scrollbar-width: auto; /* Or 'thin'. 'auto' might be better for making it wider. */
-                           /* Firefox doesn't allow explicit width like WebKit's ::-webkit-scrollbar { width: ... } */
-                           /* The perceived width will be the browser default for 'auto' */
+  scrollbar-width: auto; /* 'auto' is usually wider than 'thin' */
   scrollbar-color: var(--surface2) var(--surface); /* thumb track */
 }
 
 
-/* Modal Styles */
+/* Modal Styles (same as before) */
+.modal-overlay { /* ... */ }
+.modal-content { /* ... */ }
+/* ... rest of modal styles ... */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -282,14 +277,14 @@ textarea {
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  padding: 15px;
+  padding: 15px; 
 }
 
 .modal-content {
   background-color: var(--surface);
   padding: 30px;
   border-radius: 8px;
-  width: 100%;
+  width: 100%; 
   max-width: 400px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   color: var(--text);
@@ -365,7 +360,8 @@ textarea {
   text-align: center;
 }
 
-/* --- Mobile Responsiveness --- */
+
+/* --- Mobile Responsiveness (same as before the RTL attempt) --- */
 @media (max-width: 768px) {
   body {
     padding: 10px;
@@ -373,21 +369,21 @@ textarea {
   }
 
   .menu-bar {
-    width: 98%;
+    width: 98%; 
     gap: 3px;
-    flex-wrap: wrap;
+    flex-wrap: wrap; 
   }
 
   .menu-bar button {
-    padding: 12px 8px;
-    font-size: 0.9rem;
-    min-width: calc(20% - 4px);
-    flex-grow: 1;
+    padding: 12px 8px; 
+    font-size: 0.9rem; 
+    min-width: calc(20% - 4px); 
+    flex-grow: 1; 
   }
 
   .input-section,
   .data-table {
-    width: 98%;
+    width: 98%; 
   }
 
   .input-content {
@@ -399,7 +395,7 @@ textarea {
   }
 
   th, td {
-    padding: 10px 6px;
+    padding: 10px 6px; 
   }
 
   .scrollbar-top {
@@ -413,11 +409,11 @@ textarea {
   }
 
   .table-wrapper {
-    max-height: 60vh;
+    max-height: 60vh; 
   }
   .table-wrapper::-webkit-scrollbar {
-    height: 16px; /* Horizontal scrollbar thickness on mobile */
-    width: 30px;  /* << VERTICAL SCROLLBAR WIDTH for mobile (matching .scrollbar-top height) */
+    height: 16px; /* Horizontal for mobile */
+    width: 22px;  /* << INCREASED VERTICAL SCROLLBAR WIDTH for WebKit on mobile */
   }
 }
 
@@ -427,9 +423,12 @@ textarea {
     padding: 10px 5px;
   }
   table {
-      font-size: 12px;
+      font-size: 12px; 
   }
   th, td {
       padding: 8px 4px;
+  }
+   .table-wrapper::-webkit-scrollbar {
+    width: 20px; /* Slightly less aggressive width for very small screens */
   }
 }

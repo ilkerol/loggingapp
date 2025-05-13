@@ -10,6 +10,17 @@
   --textfield: #f5e0dc;
 }
 
+/* Apply box-sizing to all elements for easier layout management */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden; /* Prevent horizontal scroll on the html element itself */
+}
+
 body {
   margin: 0;
   padding: 20px;
@@ -17,6 +28,7 @@ body {
   background-color: var(--bg);
   color: var(--text);
   font-size: 18px;
+  overflow-x: hidden; /* Prevent horizontal scroll on the body too, caused by wide content */
 }
 
 .container {
@@ -60,17 +72,16 @@ body {
 }
 
 .input-content {
-  /* Added to ensure consistent padding inside input-section */
   padding: 15px;
   box-sizing: border-box;
 }
 
 .data-table {
   width: 90%;
-  overflow-y: auto; /* Changed from overflow:auto; to prevent vertical scrollbar on table itself if not needed */
-  max-height: 400px; /* Changed from height to max-height for flexibility */
+  /* overflow-y: auto; Let table-wrapper handle vertical scroll if needed */
+  /* max-height: 400px; Remove fixed height, let content dictate or use viewport units */
   margin: 20px auto;
-  border: 1px solid var(--surface2); /* Added border for better definition */
+  border: 1px solid var(--surface2);
   border-radius: 5px;
 }
 
@@ -79,7 +90,7 @@ table {
   border-collapse: collapse;
   background-color: var(--surface);
   font-size: 16px;
-  min-width: 1200px; /* For horizontal scrolling */
+  min-width: 1200px; /* Important for horizontal scrolling of wide tables */
 }
 
 th,
@@ -91,33 +102,20 @@ td {
 }
 
 th {
-  background-color: var(--surface2); /* Changed for better contrast */
+  background-color: var(--surface2);
   color: var(--text);
   position: sticky;
-  top: 0; /* For vertical sticky header */
+  top: 0;
   z-index: 10;
 }
-
-/* Sticky first column (optional, can be complex with horizontal scroll) */
-/* th:first-child, td:first-child {
-  position: sticky;
-  left: 0;
-  background-color: var(--surface);
-  z-index: 5;
-}
-th:first-child {
-  background-color: var(--surface2);
-  z-index: 15;
-} */
 
 .radio-group {
   display: flex;
   gap: 5px;
-  margin-bottom: 10px; /* Adjusted margin */
+  margin-bottom: 10px;
 }
 
 .radio-label {
-  /* Added for labels like "Tinnitus (1-5):" */
   margin-right: 10px;
   align-self: center;
 }
@@ -127,9 +125,7 @@ th:first-child {
   padding: 12px;
   border: none;
   border-radius: 5px;
-  background-color: var(
-    --surface2
-  ); /* Changed for better contrast with parent */
+  background-color: var(--surface2);
   color: var(--text);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -144,7 +140,7 @@ th:first-child {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 15px; /* Adjusted margin */
+  margin-bottom: 15px;
 }
 
 .num-btn {
@@ -171,7 +167,6 @@ textarea {
   width: 100%;
   padding: 12px;
   margin: 8px 0;
-  box-sizing: border-box;
   background-color: var(--textfield);
   border: none;
   color: var(--bg);
@@ -185,15 +180,13 @@ textarea {
   border-radius: 4px;
   cursor: pointer;
   border: none;
-  /* position: sticky; Consider if sticky delete button is desired */
-  /* right: 0; */
 }
 
 .export-btn {
   width: 100%;
   padding: 12px;
   margin: 5px 0;
-  background-color: var(--surface2); /* Changed for consistency */
+  background-color: var(--surface2);
   border: none;
   border-radius: 5px;
   color: var(--text);
@@ -206,26 +199,66 @@ textarea {
   color: var(--bg);
 }
 .export-btn:disabled {
-  background-color: #413e52;
-  cursor: not-allowed;
-  color: #777;
+    background-color: #413e52;
+    cursor: not-allowed;
+    color: #777;
 }
 
+/* --- Scrollbar Styling --- */
 .scrollbar-top {
   overflow-x: auto;
   overflow-y: hidden;
-  height: 1px; /* Make it nearly invisible, just for functionality */
-  background-color: var(--bg); /* Match body background */
+  height: 25px; /* Increased height for better touch target */
+  background-color: var(--bg);
+  /* For Firefox scrollbar styling */
+  scrollbar-width: auto; 
+  scrollbar-color: var(--surface2) var(--bg);
 }
+
+/* WebKit scrollbar styling for .scrollbar-top */
 .scrollbar-top::-webkit-scrollbar {
-  /* Hide scrollbar for webkit */
-  height: 0px;
+  height: 12px; 
+}
+.scrollbar-top::-webkit-scrollbar-track {
+  background: var(--surface); /* Slightly different for contrast if desired */
+  border-radius: 6px;
+}
+.scrollbar-top::-webkit-scrollbar-thumb {
+  background-color: var(--surface2);
+  border-radius: 6px;
+  border: 2px solid var(--surface); /* "Padding" effect around the thumb */
+}
+.scrollbar-top::-webkit-scrollbar-thumb:hover {
+  background-color: var(--blue);
 }
 
 .table-wrapper {
   overflow-x: auto;
-  max-height: calc(400px - 20px); /* Adjust if scrollbar-top height changes */
+  max-height: 400px; /* Or adjust as needed, e.g., using viewport units like 50vh */
+  /* WebKit scrollbar styling for .table-wrapper (main table scroll) */
 }
+.table-wrapper::-webkit-scrollbar {
+  height: 12px; /* For horizontal scrollbar */
+  width: 12px;  /* For vertical scrollbar if content overflows max-height */
+}
+.table-wrapper::-webkit-scrollbar-track {
+  background: var(--surface);
+  border-radius: 6px;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+  background-color: var(--surface2);
+  border-radius: 6px;
+  border: 2px solid var(--surface);
+}
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background-color: var(--blue);
+}
+/* Firefox scrollbar styling for .table-wrapper */
+.table-wrapper {
+  scrollbar-width: auto;
+  scrollbar-color: var(--surface2) var(--surface);
+}
+
 
 /* Modal Styles */
 .modal-overlay {
@@ -239,15 +272,16 @@ textarea {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 15px; /* Add padding for modal on small screens */
 }
 
 .modal-content {
   background-color: var(--surface);
   padding: 30px;
   border-radius: 8px;
-  width: 90%;
+  width: 100%; /* Allow it to use padding from overlay */
   max-width: 400px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   color: var(--text);
 }
 
@@ -259,17 +293,16 @@ textarea {
 }
 
 .modal-content p {
-  margin-bottom: 15px;
-  font-size: 0.95rem;
-  line-height: 1.4;
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+    line-height: 1.4;
 }
 
 .modal-content input[type="email"],
 .modal-content input[type="password"] {
-  width: 100%; /* Full width */
+  width: 100%;
   padding: 12px;
   margin-bottom: 15px;
-  box-sizing: border-box; /* Include padding in width */
   background-color: var(--textfield);
   border: 1px solid var(--surface2);
   border-radius: 4px;
@@ -291,9 +324,7 @@ textarea {
   cursor: pointer;
   font-size: 1rem;
   font-weight: bold;
-  transition:
-    background-color 0.2s ease,
-    opacity 0.2s ease;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 
 .modal-btn.confirm-btn {
@@ -301,7 +332,7 @@ textarea {
   color: var(--bg);
 }
 .modal-btn.confirm-btn:hover {
-  background-color: #8fdb97; /* Lighter green */
+  background-color: #8fdb97;
 }
 .modal-btn.confirm-btn:disabled {
   background-color: #5f8a63;
@@ -314,7 +345,7 @@ textarea {
   color: var(--text);
 }
 .modal-btn.cancel-btn:hover {
-  background-color: #6a657d; /* Lighter surface2 */
+  background-color: #6a657d;
 }
 
 .error-message {
@@ -322,4 +353,85 @@ textarea {
   margin-top: 15px;
   font-size: 0.9rem;
   text-align: center;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+    font-size: 16px;
+  }
+
+  .menu-bar {
+    width: 98%; /* Use more screen width */
+    gap: 3px;
+    flex-wrap: wrap; /* Allow buttons to wrap if they don't fit */
+  }
+
+  .menu-bar button {
+    padding: 12px 8px; /* Adjusted padding */
+    font-size: 0.9rem; /* Smaller font */
+    min-width: calc(20% - 4px); /* Try to fit 5 buttons, adjust as needed */
+    flex-grow: 1; /* Allow them to grow to fill space */
+  }
+
+  .input-section,
+  .data-table {
+    width: 98%; /* Use more screen width */
+  }
+
+  .input-content {
+    padding: 10px;
+  }
+
+  table {
+    font-size: 14px;
+    /* min-width: 0; /* Remove if table MUST scroll. Keep if columns can wrap/shrink. */
+    /* If you keep min-width: 1200px, horizontal scroll is expected. */
+  }
+
+  th, td {
+    padding: 10px 6px; /* Adjusted padding */
+  }
+
+  .scrollbar-top {
+    height: 30px; /* Even larger touch target for the top scrollbar on mobile */
+  }
+  .scrollbar-top::-webkit-scrollbar {
+    height: 16px; /* Taller scrollbar track on mobile */
+  }
+   .scrollbar-top::-webkit-scrollbar-thumb {
+    border-width: 3px; 
+  }
+
+  .table-wrapper {
+    max-height: 60vh; /* Use viewport height for table scroll area on mobile */
+  }
+  .table-wrapper::-webkit-scrollbar {
+    height: 16px;
+    width: 16px;
+  }
+
+  .modal-content {
+    padding: 20px; /* Slightly less padding in modal on mobile */
+  }
+  .modal-btn {
+    padding: 10px 15px; /* Adjust button padding in modal */
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-bar button {
+    font-size: 0.8rem;
+    padding: 10px 5px;
+    /* For very small screens, maybe 2 or 3 buttons per row */
+    /* min-width: calc(33.33% - 4px); */
+  }
+  table {
+      font-size: 12px; /* Even smaller for very narrow screens if necessary */
+  }
+  th, td {
+      padding: 8px 4px;
+  }
 }

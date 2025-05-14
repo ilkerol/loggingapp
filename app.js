@@ -58,12 +58,18 @@ tableBody.addEventListener("click", (e) => {
     const index = parseInt(e.target.dataset.index, 10);
     if (
       confirm(
-        "Are you sure you want to delete this entry? This will be synced to other devices.",
+        "Are you sure you want to delete this entry? This will be synced to other devices. (Note: Deletion will reflect after next sync; item might reappear temporarily if other devices haven't synced the deletion).",
       )
     ) {
       entries.splice(index, 1);
       updateTable();
       saveData();
+      // With the current "UPLOAD-ONLY THEN PULL" sync, this local deletion will be
+      // effectively "undone" on the next sync if the item still exists on the server.
+      // To make deletions persistent, the sync logic would need to handle them explicitly.
+      // For now, the user experience is: delete locally, it's gone. Sync: it might come back if on server.
+      // If another device syncs after this local delete AND that device's sync *does* propagate deletions,
+      // then it will be gone from the server.
     }
   }
 });
@@ -501,11 +507,24 @@ function saveData() {
 }
 
 function updateTable() {
+  // Sort entries by precise_logged_at descending before rendering
+  entries.sort((a, b) => {
+    const dateA = a.precise_logged_at ? new Date(a.precise_logged_at) : new Date(`${a.date}T${a.time}`);
+    const dateB = b.precise_logged_at ? new Date(b.precise_logged_at) : new Date(`${b.date}T${b.time}`);
+    return dateB - dateA;
+  });
+
   tableBody.innerHTML = entries
     .map((entry, index) => {
       let data = {};
       try {
-        data = JSON.parse(entry.data);
+        // Ensure entry.data is a string before parsing
+        if (typeof entry.data === 'string') {
+          data = JSON.parse(entry.data);
+        } else if (typeof entry.data === 'object' && entry.data !== null) {
+          // If data is already an object (e.g. from older versions or direct manipulation)
+          data = entry.data;
+        }
       } catch (e) {
         console.error("Failed to parse entry data:", entry.data, e);
       }
@@ -548,7 +567,15 @@ function exportCsv(filterCategory) {
   const csvContent = [
     "Date,Time,Category,Mood,Tinnitus,Systolic,Diastolic,Heartrate,Food,Sport,Comments",
     ...filtered.map((entry) => {
-      const data = JSON.parse(entry.data);
+      let data = {};
+      try {
+        if (typeof entry.data === 'string') {
+          data = JSON.parse(entry.data);
+        } else if (typeof entry.data === 'object' && entry.data !== null) {
+          data = entry.data;
+        }
+      } catch (e) { /* ignore parsing error for export, use empty fields */ }
+      
       return [
         entry.date,
         entry.time,
@@ -726,7 +753,7 @@ async function handleSupabaseLoginAndSync() {
     }
     if (authData.user) {
       localStorage.setItem("supabaseUserEmail", email);
-      await syncDataWithSupabase(authData.user);
+      await syncDataWithSupabase(authData.user); // Call the chosen sync logic
       hideSupabaseLoginPopup();
       alert("Sync with cloud completed successfully!");
     } else {
@@ -744,115 +771,72 @@ async function handleSupabaseLoginAndSync() {
   }
 }
 
+// --- "UPLOAD-ONLY THEN PULL" Sync Logic ---
 async function syncDataWithSupabase(user) {
   if (!supabaseClient || !user) {
+    // This check is a bit redundant as handleSupabaseLoginAndSync also checks, but good for direct calls.
     alert("Sync aborted: Supabase client or user not available.");
     return;
   }
-  console.log("Starting refined simplified sync for user:", user.id);
-  ensureLocalEntryIds();
+  console.log("Starting UPLOAD-ONLY THEN PULL sync for user:", user.id);
+  ensureLocalEntryIds(); // Make sure all local entries have an ID.
 
-  console.log("Fetching initial remote entry IDs...");
-  const { data: initialRemoteEntries, error: initialFetchError } =
-    await supabaseClient
-      .from("log_entries")
-      .select("id")
-      .eq("user_id", user.id);
+  // 1. Get current local entries (use a clone of `entries` to avoid modification issues if any async ops were to change `entries` unexpectedly)
+  const currentLocalEntries = [...entries]; 
+  console.log(`Current local entries count before sync: ${currentLocalEntries.length}`);
 
-  if (initialFetchError) {
-    console.error("Error fetching initial remote IDs:", initialFetchError);
-    const errorMsg =
-      "Could not fetch initial remote IDs: " + initialFetchError.message;
-    if (supabaseLoginModal.style.display === "flex") {
-      supabaseLoginError.textContent = errorMsg;
-      supabaseLoginError.style.display = "block";
-    } else {
-      alert(errorMsg);
-    }
-    throw new Error(errorMsg);
-  }
-  const initialRemoteIds = new Set(
-    (initialRemoteEntries || []).map((e) => e.id),
-  );
-  console.log(`Fetched ${initialRemoteIds.size} initial remote IDs.`);
-
-  const localEntryIds = new Set(entries.map((e) => e.id));
-
-  const idsToDeleteOnRemote = [];
-  initialRemoteIds.forEach((remoteId) => {
-    if (!localEntryIds.has(remoteId)) {
-      idsToDeleteOnRemote.push(remoteId);
-    }
-  });
-
-  if (idsToDeleteOnRemote.length > 0) {
-    console.log(
-      `Deleting ${idsToDeleteOnRemote.length} entries from Supabase...`,
-    );
-    const { error: deleteError } = await supabaseClient
-      .from("log_entries")
-      .delete()
-      .in("id", idsToDeleteOnRemote)
-      .eq("user_id", user.id);
-
-    if (deleteError) {
-      console.error("Error deleting entries from Supabase:", deleteError);
-      const errorMsg = "Error deleting some entries from the server. Sync might be incomplete: " + deleteError.message;
-      if (supabaseLoginModal.style.display === "flex") {
-        supabaseLoginError.textContent = errorMsg;
-        supabaseLoginError.style.display = "block";
-      } else {
-        alert(errorMsg);
+  // 2. Upsert ALL current local entries to Supabase.
+  // `onConflict: 'id'` will handle new vs. existing.
+  // This ensures anything this client knows about, the server will know about (or be updated with).
+  if (currentLocalEntries.length > 0) {
+    const entriesToUpsert = currentLocalEntries.map(localEntry => {
+      // Ensure `precise_logged_at` exists and is valid, or derive it.
+      let loggedAtTimestamp = localEntry.precise_logged_at;
+      if (!loggedAtTimestamp || isNaN(new Date(loggedAtTimestamp).getTime())) {
+          loggedAtTimestamp = (localEntry.date && localEntry.time) 
+                              ? new Date(`${localEntry.date}T${localEntry.time}:00Z`).toISOString() 
+                              : new Date().toISOString(); // Fallback to now if date/time missing
+          if (!localEntry.precise_logged_at) {
+            console.warn(`Entry ${localEntry.id} missing precise_logged_at, derived: ${loggedAtTimestamp}`);
+          } else {
+            console.warn(`Entry ${localEntry.id} had invalid precise_logged_at, derived: ${loggedAtTimestamp}`);
+          }
       }
-      throw new Error(errorMsg); // *** MODIFIED: Throw error to stop false success ***
-    } else {
-      console.log(
-        `${idsToDeleteOnRemote.length} entries successfully deleted from Supabase.`,
-      );
-    }
-  } else {
-    console.log("No entries to delete from Supabase based on local state.");
-  }
+      
+      // Ensure `localEntry.data` is parsed if it's a string, or handle if already object
+      let detailsData = {};
+      if (typeof localEntry.data === 'string') {
+        try {
+          detailsData = JSON.parse(localEntry.data);
+        } catch (parseError) {
+          console.error(`Error parsing localEntry.data for ID ${localEntry.id}:`, localEntry.data, parseError);
+          detailsData = { error_parsing_local_data: true }; // Or some other error state
+        }
+      } else if (typeof localEntry.data === 'object' && localEntry.data !== null) {
+        detailsData = localEntry.data; // Already an object
+      }
 
-  const localEntriesToUpsert = entries.map((localEntry) => {
-    let loggedAtTimestamp =
-      localEntry.precise_logged_at ||
-      new Date(`${localEntry.date}T${localEntry.time}:00Z`).toISOString();
-    if (!localEntry.precise_logged_at) {
-      console.warn(
-        `Upserting old entry ${localEntry.id} (category: ${localEntry.category}, date: ${localEntry.date} ${localEntry.time}) missing precise_logged_at, using derived time.`,
-      );
-    }
-    return {
-      id: localEntry.id,
-      user_id: user.id,
-      logged_at: loggedAtTimestamp,
-      category: localEntry.category,
-      details: JSON.parse(localEntry.data), // Ensure 'data' is parsed before sending
-    };
-  });
 
-  // *** ADDED LOGGING ***
-  console.log("Local entries prepared for upsert:", JSON.stringify(localEntriesToUpsert, null, 2));
+      return {
+        id: localEntry.id, // Assumed to be present due to ensureLocalEntryIds()
+        user_id: user.id,
+        logged_at: loggedAtTimestamp,
+        category: localEntry.category,
+        details: detailsData,
+      };
+    });
 
-  if (localEntriesToUpsert.length > 0) {
-    console.log(
-      `Upserting ${localEntriesToUpsert.length} local entries to Supabase.`,
-    );
-    // *** MODIFIED: Capture upsertedData ***
+    console.log(`Upserting all ${entriesToUpsert.length} local entries to Supabase.`);
+    // console.log("Data to upsert:", JSON.stringify(entriesToUpsert, null, 2)); // For deep debugging
+    
     const { data: upsertedData, error: upsertError } = await supabaseClient
       .from("log_entries")
-      .upsert(localEntriesToUpsert, { onConflict: "id" }); // Supabase JS v2 .upsert() returns data by default
-
-    // *** ADDED LOGGING ***
-    console.log("Upsert operation data from Supabase:", upsertedData);
-    console.log("Upsert operation error from Supabase:", upsertError);
+      .upsert(entriesToUpsert, { onConflict: "id" });
 
     if (upsertError) {
-      console.error("Error upserting to Supabase:", upsertError);
-      const errorMsg =
-        "Could not upload/update local data: " + upsertError.message;
-      if (supabaseLoginModal.style.display === "flex") {
+      console.error("Error upserting local entries to Supabase:", upsertError);
+      const errorMsg = "Could not upload local data: " + upsertError.message;
+       if (supabaseLoginModal.style.display === "flex") {
         supabaseLoginError.textContent = errorMsg;
         supabaseLoginError.style.display = "block";
       } else {
@@ -860,33 +844,23 @@ async function syncDataWithSupabase(user) {
       }
       throw new Error(errorMsg);
     }
-    // *** MODIFIED LOG MESSAGE ***
-    console.log(
-      `${localEntriesToUpsert.length} entries successfully upserted (according to client).`,
-    );
+    console.log("All local entries reported as successfully upserted by client.", upsertedData ? `Received ${upsertedData.length} items in upsert response.` : "No data in upsert response.");
   } else {
     console.log("No local entries to upsert.");
   }
 
-  console.log("Re-fetching final state from Supabase...");
-  const { data: finalRemoteEntriesData, error: finalFetchError } =
-    await supabaseClient
-      .from("log_entries")
-      .select("id, logged_at, category, details, created_at") // created_at is good for debugging
-      .eq("user_id", user.id);
-
-  // *** ADDED LOGGING ***
-  console.log("Final remote entries fetched:", JSON.stringify(finalRemoteEntriesData, null, 2));
-  console.log("Local entries array BEFORE overwrite with remote data:", JSON.stringify(entries, null, 2));
-
+  // 3. Fetch ALL data from Supabase. This is now the definitive source of truth.
+  // This will include our upserts and anything from other devices.
+  // Client NEVER tells server to delete based on its own potentially incomplete state.
+  console.log("Fetching final definitive state from Supabase...");
+  const { data: finalRemoteEntriesList, error: finalFetchError } = await supabaseClient
+    .from("log_entries")
+    .select("id, logged_at, category, details") // All fields needed to reconstruct local entry
+    .eq("user_id", user.id);
 
   if (finalFetchError) {
-    console.error(
-      "Error re-fetching final data from Supabase:",
-      finalFetchError,
-    );
-    const errorMsg =
-      "Could not re-fetch final data: " + finalFetchError.message;
+    console.error("Error fetching final data from Supabase:", finalFetchError);
+    const errorMsg = "Could not fetch final data from server: " + finalFetchError.message;
     if (supabaseLoginModal.style.display === "flex") {
       supabaseLoginError.textContent = errorMsg;
       supabaseLoginError.style.display = "block";
@@ -896,28 +870,31 @@ async function syncDataWithSupabase(user) {
     throw new Error(errorMsg);
   }
 
-  const newLocalEntriesArray = (finalRemoteEntriesData || []).map(
-    (remoteEntry) => {
-      const loggedAtDate = new Date(remoteEntry.logged_at);
-      return {
-        id: remoteEntry.id,
-        precise_logged_at: remoteEntry.logged_at,
-        date: loggedAtDate.toISOString().split("T")[0],
-        time: loggedAtDate.toTimeString().split(" ")[0].slice(0, 5),
-        category: remoteEntry.category,
-        data: JSON.stringify(remoteEntry.details || {}), // Ensure details is always a stringified JSON
-      };
-    },
-  );
+  console.log(`Fetched ${finalRemoteEntriesList ? finalRemoteEntriesList.length : 0} entries from Supabase to be the new local state.`);
 
-  entries = newLocalEntriesArray;
-  entries.sort((a, b) => { // Sort by precise_logged_at to ensure correct order
-    const dateTimeA = new Date(a.precise_logged_at);
-    const dateTimeB = new Date(b.precise_logged_at);
-    return dateTimeB - dateTimeA; // descending order (newest first)
+  const newLocalState = (finalRemoteEntriesList || []).map(remoteEntry => {
+    const loggedAtDate = new Date(remoteEntry.logged_at); // remoteEntry.logged_at should be a valid ISO string
+    return {
+      id: remoteEntry.id,
+      precise_logged_at: remoteEntry.logged_at, // Store the exact timestamp from server
+      date: loggedAtDate.toISOString().split("T")[0],
+      time: loggedAtDate.toTimeString().split(" ")[0].slice(0, 5),
+      category: remoteEntry.category,
+      data: JSON.stringify(remoteEntry.details || {}), // Ensure `data` is a stringified JSON
+    };
   });
 
-  saveData();
-  updateTable();
-  console.log("Refined simplified sync process completed.");
+  entries = newLocalState; // Replace local entries with the definitive set from the server
+  
+  // Sort entries by precise_logged_at descending before saving and updating table
+  // This ensures `updateTable` also renders them sorted.
+  entries.sort((a, b) => {
+    const dateA = new Date(a.precise_logged_at);
+    const dateB = new Date(b.precise_logged_at);
+    return dateB - dateA; // Newest first
+  });
+
+  saveData();   // Save the new local state
+  updateTable(); // Update the UI
+  console.log("UPLOAD-ONLY THEN PULL sync process completed.");
 }
